@@ -38,7 +38,7 @@ alias edtmux='vi ~/.tmux.conf'
 alias rldtmux='tmux source-file ~/.tmux.conf'
 
 # specific boulot
-. ~/tmux.conf.d/specific_pmu
+. ~/tmux.conf.d/specific_pmu.sh
 
 # usefull puppet
 export PUPPET_PATH=~/puppet

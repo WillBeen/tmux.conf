@@ -14,9 +14,9 @@ function cnx() {
   if [[ ${args:4:3} == 'prd' ]] ; then
     prod='PROD '
   fi
-  printf '\033]2;%s\033\\' "${prod}${@%%.*}"
+#  printf '\033]2;%s\033\\' "${prod}${@%%.*}"
   ssh ${@%%.*}.adm.parimutuel.local
-  printf '\033]2;%s\033\\' $(hostname)
+#  printf '\033]2;%s\033\\' $(hostname)
   LANG=en_US.UTF-8
   TERM=screen-256color
 }
