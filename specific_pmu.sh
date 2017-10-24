@@ -4,21 +4,32 @@
 # usefull puppet
 export FACTERLIB=~/puppet/pmu_os_facts/lib/facter
 
+# serveur de rebond pour aller sur les serveurs sur AWS
+export REBOND_AWS=gcf-mut-cldv1.adm.parimutuel.local
+
 # ssh connections
 function cnx() {
 #  tmux rename-window ${@%%.*}
   LANG=en_US.ISO-8859-15
   TERM=xterm
   args=$@
-  prod=''
-  if [[ ${args:4:3} == 'prd' ]] ; then
-    prod='PROD '
+  if [[ $args =~ 10\.21[23456]\..*\..* ]] ; then
+    echo !!! connexion cloud !!!
+    ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${args}
+  elif [[ $args =~ ip-.*-.*-.*-.* ]] ; then
+    tmp=${args//-/.}
+    echo !!! connexion cloud !!!
+    ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
+  elif [[ $args =~ .*\..*\..*\..* ]] ; then 
+    echo !!! connexion directe !!!
+    ssh $args
+  else
+    echo !!! connexion directe !!!
+    ssh ${@%%.*}.adm.parimutuel.local
   fi
-#  printf '\033]2;%s\033\\' "${prod}${@%%.*}"
-  ssh ${@%%.*}.adm.parimutuel.local
-#  printf '\033]2;%s\033\\' $(hostname)
   LANG=en_US.UTF-8
   TERM=screen-256color
+  pane-rename
 }
 # ssh connections for AIX
 function aix() {
@@ -59,7 +70,7 @@ puppetmasterprd="gcf-prd-appv1.adm.parimutuel.local"
 alias cnxpuppetmasterprd="cnx $puppetmasterprd"
 puppetmastermut="gcf-mut-appv1.adm.parimutuel.local"
 alias cnxpuppetmastermut="cnx $puppetmastermut"
-# satellite 6
-satellite6="itc-mut-satv1.adm.parimutuel.local"
-alias cnxsatellite6="cnx root@$satellite6"
+# packer mut
+packermut="gcf-mut-cldv1.adm.parimutuel.local"
+alias cnxpackermut="cnx $packermut"
 
