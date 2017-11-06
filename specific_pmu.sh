@@ -19,13 +19,15 @@ function cnx() {
     tmp=${args//-/.}
     echo !!! connexion cloud !!!
     ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
-  elif [[ $args =~ .*\..*\..*\..* ]] ; then 
+  elif [[ ( ${args:11:1} == 'v' || ${srv:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
     echo !!! connexion directe !!!
-    ssh $args
-  elif [[ ${args:11:1} == 'v' || ${srv:11:1} == 'w' ]] ; then
+    panename="\033]2;$(whoami)@${args}\033\\"
+    printf $panename
+    ssh ${@%%.*}.adm.parimutuel.local
+  elif [[ $args =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]] ; then 
     echo !!! connexion directe !!!
     TERM=xterm
-    ssh ${@%%.*}.adm.parimutuel.local
+    ssh $args
   else
     echo !!! connexion directe !!!
     TERM=xterm
