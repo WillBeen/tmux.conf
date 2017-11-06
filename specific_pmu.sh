@@ -11,7 +11,6 @@ export REBOND_AWS=gcf-mut-cldv1.adm.parimutuel.local
 function cnx() {
 #  tmux rename-window ${@%%.*}
   LANG=en_US.ISO-8859-15
-  TERM=xterm
   args=$@
   if [[ $args =~ 10\.21[23456]\..*\..* ]] ; then
     echo !!! connexion cloud !!!
@@ -23,8 +22,13 @@ function cnx() {
   elif [[ $args =~ .*\..*\..*\..* ]] ; then 
     echo !!! connexion directe !!!
     ssh $args
+  elif [[ ${args:11:1} == 'v' || ${srv:11:1} == 'w' ]] ; then
+    echo !!! connexion directe !!!
+    TERM=xterm
+    ssh ${@%%.*}.adm.parimutuel.local
   else
     echo !!! connexion directe !!!
+    TERM=xterm
     ssh ${@%%.*}.adm.parimutuel.local
   fi
   LANG=en_US.UTF-8
