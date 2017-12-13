@@ -13,27 +13,19 @@ function cnx() {
   LANG=en_US.ISO-8859-15
   args=$@
   if [[ $args =~ 10\.21[23456]\..*\..* ]] ; then
-    echo !!! connexion cloud !!!
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
     clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${args}
   elif [[ $args =~ ip-.*-.*-.*-.* ]] ; then
     tmp=${args//-/.}
-    echo !!! connexion cloud !!!
     clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
   elif [[ ( ${args:11:1} == 'v' || ${srv:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
-    echo !!! connexion directe !!!
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
-    clear ; ssh ${@%%.*}.adm.parimutuel.local
-  elif [[ $args =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]] ; then 
-    echo !!! connexion directe !!!
-    TERM=xterm
     clear ; ssh $args
   else
-    echo !!! connexion directe !!!
     TERM=xterm
-    clear ; ssh ${@%%.*}.adm.parimutuel.local
+    clear ; ssh $args
   fi
   LANG=en_US.UTF-8
   TERM=screen-256color
