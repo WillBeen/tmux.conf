@@ -14,24 +14,26 @@ function cnx() {
   args=$@
   if [[ $args =~ 10\.21[23456]\..*\..* ]] ; then
     echo !!! connexion cloud !!!
-    ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${args}
+    panename="\033]2;$(whoami)@${args}\033\\"
+    printf $panename
+    clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${args}
   elif [[ $args =~ ip-.*-.*-.*-.* ]] ; then
     tmp=${args//-/.}
     echo !!! connexion cloud !!!
-    ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
+    clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
   elif [[ ( ${args:11:1} == 'v' || ${srv:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
     echo !!! connexion directe !!!
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
-    ssh ${@%%.*}.adm.parimutuel.local
+    clear ; ssh ${@%%.*}.adm.parimutuel.local
   elif [[ $args =~ [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ ]] ; then 
     echo !!! connexion directe !!!
     TERM=xterm
-    ssh $args
+    clear ; ssh $args
   else
     echo !!! connexion directe !!!
     TERM=xterm
-    ssh ${@%%.*}.adm.parimutuel.local
+    clear ; ssh ${@%%.*}.adm.parimutuel.local
   fi
   LANG=en_US.UTF-8
   TERM=screen-256color
@@ -76,7 +78,9 @@ puppetmasterprd="gcf-prd-appv1.adm.parimutuel.local"
 alias cnxpuppetmasterprd="cnx $puppetmasterprd"
 puppetmastermut="gcf-mut-appv1.adm.parimutuel.local"
 alias cnxpuppetmastermut="cnx $puppetmastermut"
-# packer mut
-packermut="gcf-mut-cldv1.adm.parimutuel.local"
-alias cnxpackermut="cnx $packermut"
+puppetv4mut="gcf-mut-appv2.adm.parimutuel.local"
+alias cnxpuppetv4mut="cnx $puppetv4mut"
+# packercloudmut="gcf-mut-cldv1.adm.parimutuel.local"
+cloudmut="gcf-mut-cldv1.adm.parimutuel.local"
+alias cnxcloudmut="cnx $cloudmut"
 

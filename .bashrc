@@ -18,6 +18,7 @@ alias l='ls -lisa --color'
 alias catbashrc='cat ~/.bashrc'
 alias edbashrc='vi ~/.bashrc'
 alias rldbashrc='. ~/.bashrc'
+alias edspecific='vi ~/tmux.conf.d/specific_pmu.sh'
 
 # edit and reload .vimrc
 alias edvimrc='vi ~/.vimrc'
@@ -32,6 +33,16 @@ function tmu() {
   else
     tmux $@
   fi
+  clear
+  tmux show-buffer
+  read
+  # lance tmux en boucle et affiche le buffer
+  while true ; do
+    tmux attach
+    clear
+    tmux show-buffer
+    read
+  done
 }
 # reload reload .tmux.conf
 alias edtmux='vi ~/.tmux.conf'
@@ -39,6 +50,8 @@ alias rldtmux='tmux source-file ~/.tmux.conf'
 
 # specific boulot
 . ~/tmux.conf.d/specific_pmu.sh
+# edit cloud known hosts
+alias cloud_known_hosts="vim scp://gcf-mut-cldv1.adm.parimutuel.local//home/p093770/.ssh/known_hosts"
 
 # usefull puppet
 export PUPPET_PATH=~/puppet
