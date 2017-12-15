@@ -24,6 +24,8 @@ function cnx() {
     printf $panename
     clear ; ssh $args
   else
+    panename="\033]2;$(whoami)@${args}\033\\"
+    printf $panename
     TERM=xterm
     clear ; ssh $args
   fi
