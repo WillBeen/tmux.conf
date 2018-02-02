@@ -39,7 +39,9 @@ function tmu() {
   # lance tmux en boucle et affiche le buffer
   while true ; do
     tmux attach
+    # clear du terminal (y compris le scrollback)
     clear
+    printf '\033[3J'
     tmux show-buffer
     read
   done
