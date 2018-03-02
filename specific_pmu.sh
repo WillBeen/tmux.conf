@@ -62,10 +62,16 @@ function cnx() {
   elif [[ ( ${args:11:1} == 'v' || ${args:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
+    key_string="`cat ~/.ssh/id_rsa.pub`"
+    key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
+    ssh $args "grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys"
     clear ; ssh $args
   else
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
+    key_string="`cat ~/.ssh/id_rsa.pub`"
+    key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
+    ssh $args "grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys"
     TERM=xterm
     clear ; ssh $args
   fi
