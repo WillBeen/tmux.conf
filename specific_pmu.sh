@@ -58,8 +58,7 @@ function cnx() {
     clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
   # connexion via rebond rundeck prd pour acces lecture seule sur serveurs de production
   elif [[ ${args:3:5} == "-prd-" && ! ( $args =~ ${rundeckprd}.*  || ${args:0:3} == gcf ) ]] ; then
-    #ssh -t $rundeckprd sudo -iu rundeck ssh $args
-    ssh -t $rundeckprd ssh $args
+    ssh -t $rundeckprd "ssh -o PasswordAuthentication=no $args || ( ssh-copy-id $args ; ssh $args )"
   elif [[ ( ${args:11:1} == 'v' || ${args:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
@@ -67,8 +66,6 @@ function cnx() {
     key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
     old_key="`cat ~/.ssh/id_rsa.pub.old | cut -d " " -f 2`"
     clear
-#    ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys"
-#    clear ; ssh $args
     ssh -o PasswordAuthentication=no $args
     if [[ $? == 255 ]] ; then
       ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
