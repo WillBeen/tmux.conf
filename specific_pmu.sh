@@ -65,16 +65,28 @@ function cnx() {
     printf $panename
     key_string="`cat ~/.ssh/id_rsa.pub`"
     key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
-    ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys"
-    clear ; ssh $args
+    old_key="`cat ~/.ssh/id_rsa.pub.old | cut -d " " -f 2`"
+    clear
+#    ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys"
+#    clear ; ssh $args
+    ssh -o PasswordAuthentication=no $args
+    if [[ $? == 255 ]] ; then
+      ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
+      clear ; ssh $args -o PasswordAuthentication=no
+    fi
   else
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
     key_string="`cat ~/.ssh/id_rsa.pub`"
     key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
-    ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys"
+    old_key="`cat ~/.ssh/id_rsa.pub.old | cut -d " " -f 2`"
     TERM=xterm
-    clear ; ssh $args
+    clear
+    ssh -o PasswordAuthentication=no $args
+    if [[ $? == 255 ]] ; then
+      ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
+      clear ; ssh $args -o PasswordAuthentication=no
+    fi
   fi
   LANG=en_US.UTF-8
   TERM=screen-256color
