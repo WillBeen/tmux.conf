@@ -56,9 +56,6 @@ function cnx() {
   elif [[ $args =~ ip-.*-.*-.*-.* ]] ; then
     tmp=${args//-/.}
     clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
-  # connexion via rebond rundeck prd pour acces lecture seule sur serveurs de production
-  elif [[ ${args:3:5} == "-prd-" && ! ( $args =~ ${rundeckprd}.*  || ${args:0:3} == gcf ) ]] ; then
-    ssh -t $rundeckprd "ssh -o PasswordAuthentication=no $args || ( ssh-copy-id $args ; ssh $args )"
   elif [[ ( ${args:11:1} == 'v' || ${args:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
     panename="\033]2;$(whoami)@${args}\033\\"
     printf $panename
