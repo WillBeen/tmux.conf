@@ -45,11 +45,10 @@ export REBOND_AWS=gcf-mut-cldv1.adm.parimutuel.local
 
 # ssh connections
 function cnx() {
-#  tmux rename-window ${@%%.*}
   LANG=en_US.ISO-8859-15
-  args=$@
+  args=`echo $@ | awk 'BEGIN {FS="@"} {if (NF >= 2 )print $(NF-1)"@"$NF ; else print "'$(whoami)'@"$NF}'`
   if [[ $args =~ 10\.21[23456]\..*\..* ]] ; then
-    panename="\033]2;$(whoami)@${args}\033\\"
+    panename="\033]2;${args}\033\\"
     printf $panename
     clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${args}
   # connexion via rebond cloud pour amazon
@@ -57,7 +56,7 @@ function cnx() {
     tmp=${args//-/.}
     clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
   elif [[ ( ${args:11:1} == 'v' || ${args:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
-    panename="\033]2;$(whoami)@${args}\033\\"
+    panename="\033]2;${args}\033\\"
     printf $panename
     key_string="`cat ~/.ssh/id_rsa.pub`"
     key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
@@ -69,12 +68,12 @@ function cnx() {
       clear ; ssh $args -o PasswordAuthentication=no
     fi
   else
-    panename="\033]2;$(whoami)@${args}\033\\"
+    panename="\033]2;${args}\033\\"
     printf $panename
     key_string="`cat ~/.ssh/id_rsa.pub`"
     key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
     old_key="`cat ~/.ssh/id_rsa.pub.old | cut -d " " -f 2`"
-    TERM=xterm
+    #TERM=xterm
     clear
     ssh -o PasswordAuthentication=no $args
     if [[ $? == 255 ]] ; then

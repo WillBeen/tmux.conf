@@ -15,7 +15,7 @@ function split-pane() {
     str=${title:${#user}+1}
     host=${str%%:*}
     curdir=${str##*:}
-    tmux split-window $1 ". ~/tmux.conf.d/specific_pmu.sh ; cnx ${host}"
+    tmux split-window $1 ". ~/tmux.conf.d/specific_pmu.sh ; cnx ${user}@${host}"
   fi
 }
 split-pane $1

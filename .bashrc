@@ -15,14 +15,14 @@ export PATH="$PATH:/usr/java/latest/bin"
 alias l='ls -lisa --color'
 
 # edit and reload .bashrc
-alias catbashrc='cat ~/.bashrc'
-alias edbashrc='vi ~/.bashrc'
 alias rldbashrc='. ~/.bashrc'
-alias edspecific='vi ~/tmux.conf.d/specific_pmu.sh'
+alias edbashrc='vi ~/.bashrc ; rldbashrc'
+alias catbashrc='cat ~/.bashrc'
+alias edspecific='vi ~/tmux.conf.d/specific_pmu.sh ; rldbashrc'
 
 # edit and reload .vimrc
-alias edvimrc='vi ~/.vimrc'
 alias rldvimrc='. ~/.vimrc'
+alias edvimrc='vi ~/.vimrc ; rldvimrc'
 
 # lancement de tmux attach si sessions existantes
 function tmu() {
@@ -47,8 +47,8 @@ function tmu() {
   done
 }
 # reload reload .tmux.conf
-alias edtmux='vi ~/.tmux.conf'
 alias rldtmux='tmux source-file ~/.tmux.conf'
+alias edtmux='vi ~/.tmux.conf ; rldtmux'
 
 # specific boulot
 . ~/tmux.conf.d/specific_pmu.sh
