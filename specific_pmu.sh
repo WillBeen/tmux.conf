@@ -3,9 +3,8 @@
 
 # usefull puppet
 export FACTERLIB=~/puppet/pmu_os_facts/lib/facter
-
 # bac a sable developpement puppet
-devpuppet="pfe-bas-appv1"
+devpuppet="gcf-dev-appv1"
 alias cnxdevpuppet="cnx $devpuppet"
 # rundeck production
 rundeckprd="itc-prd-rbav1"
@@ -30,12 +29,14 @@ alias cnxforemanmut="cnx $foremanmut"
 foremanprd='gcf-prd-prov1'
 alias cnxforemanprd="cnx $foremanprd"
 # puppet
-puppetmasterprd="gcf-prd-appv1"
-alias cnxpuppetmasterprd="cnx $puppetmasterprd"
-puppetmastermut="gcf-mut-appv1"
-alias cnxpuppetmastermut="cnx $puppetmastermut"
-puppetv4mut="gcf-mut-appv2"
-alias cnxpuppetv4mut="cnx $puppetv4mut"
+puppetmasterprd3="gcf-prd-appv1"
+alias cnxpuppetmasterprd3="cnx $puppetmasterprd3"
+puppetmasterprd4="gcf-prd-appv2"
+alias cnxpuppetmasterprd4="cnx $puppetmasterprd4"
+puppetmastermut3="gcf-mut-appv1"
+alias cnxpuppetmastermut3="cnx $puppetmastermut3"
+puppetmastermut4="gcf-mut-appv2"
+alias cnxpuppetmastermut4="cnx $puppetmastermut4"
 # packercloudmut="gcf-mut-cldv1.adm.parimutuel.local"
 cloudmut="gcf-mut-cldv1"
 alias cnxcloudmut="cnx $cloudmut"

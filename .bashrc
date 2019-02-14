@@ -26,9 +26,10 @@ alias edvimrc='vi ~/.vimrc ; rldvimrc'
 
 # lancement de tmux attach si sessions existantes
 function tmu() {
-  # demande de passphrase avant de lancer tmux pour ne plus avoir a la saisir a chaque fois
-  eval $(ssh-agent -s)
-  ssh-add ~/.ssh/id_rsa
+# demande de passphrase avant de lancer tmux pour ne plus avoir a la saisir a chaque fois
+#  eval `ssh-agent -s`
+#  ssh-add -D
+#  ssh-add ~/.ssh/id_rsa
 
   tput smkx
   tmux list-sessions > /dev/null
@@ -47,7 +48,11 @@ function tmu() {
     clear
     printf '\033[3J'
     tmux show-buffer
-    read
+    read choice
+#    if [[ "${choice}" =~ (q|quit|exit) ]] ; then
+#      ssh-agent -k
+#      return
+#    fi
   done
 }
 # reload reload .tmux.conf
