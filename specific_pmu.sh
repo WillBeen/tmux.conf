@@ -48,25 +48,17 @@ export REBOND_AWS=gcf-mut-cldv1.adm.parimutuel.local
 function cnx() {
   LANG=en_US.ISO-8859-15
   args=`echo $@ | awk 'BEGIN {FS="@"} {if (NF >= 2 )print $(NF-1)"@"$NF ; else print "'$(whoami)'@"$NF}'`
-  if [[ $args =~ 10\.21[23456]\..*\..* ]] ; then
-    panename="\033]2;${args}\033\\"
-    printf $panename
-    clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${args}
-  # connexion via rebond cloud pour amazon
-  elif [[ $args =~ ip-.*-.*-.*-.* ]] ; then
-    tmp=${args//-/.}
-    clear ; ssh -t ${REBOND_AWS} ssh -i .ssh/aws.pem ec2-user@${tmp:3}
-  elif [[ ( ${args:11:1} == 'v' || ${args:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
+  if [[ ( ${args:11:1} == 'v' || ${args:11:1} == 'w' ) && ! ( $args =~ .+@.+ ) ]] ; then
     panename="\033]2;${args}\033\\"
     printf $panename
     key_string="`cat ~/.ssh/id_rsa.pub`"
     key="`cat ~/.ssh/id_rsa.pub | cut -d " " -f 2`"
     old_key="`cat ~/.ssh/id_rsa.pub.old | cut -d " " -f 2`"
     clear
-    ssh -o PasswordAuthentication=no $args
+    ssh -A -o PasswordAuthentication=no $args
     if [[ $? == 255 ]] ; then
-      ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
-      clear ; ssh $args -o PasswordAuthentication=no
+      ssh -A $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
+      clear ; ssh -A $args -o PasswordAuthentication=no
     fi
   else
     panename="\033]2;${args}\033\\"
@@ -76,10 +68,10 @@ function cnx() {
     old_key="`cat ~/.ssh/id_rsa.pub.old | cut -d " " -f 2`"
     #TERM=xterm
     clear
-    ssh -o PasswordAuthentication=no $args
+    ssh -A -o PasswordAuthentication=no $args
     if [[ $? == 255 ]] ; then
-      ssh $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
-      clear ; ssh $args -o PasswordAuthentication=no
+      ssh -A $args "[ -d ~/.ssh ] || mkdir ~/.ssh ; chmod 750 ~/.ssh ; grep ${key} ~/.ssh/authorized_keys 1>/dev/null 2>&1 || echo '${key_string}' >> ~/.ssh/authorized_keys ; sed -i '\:${old_key}:d' ~/.ssh/authorized_keys"
+      clear ; ssh -A $args -o PasswordAuthentication=no
     fi
   fi
   LANG=en_US.UTF-8

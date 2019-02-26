@@ -49,10 +49,9 @@ function tmu() {
     printf '\033[3J'
     tmux show-buffer
     read choice
-#    if [[ "${choice}" =~ (q|quit|exit) ]] ; then
-#      ssh-agent -k
-#      return
-#    fi
+    if [[ "${choice}" =~ (q|quit|exit) ]] ; then
+      return
+    fi
   done
 }
 # reload reload .tmux.conf
