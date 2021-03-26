@@ -1,5 +1,6 @@
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
+export PATH=${PATH}:${HOME}/bin
 
 zstyle ':completion:*' completer _expand _complete _ignored
 zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' '' 'r:|[._-]=** r:|=**'
@@ -10,15 +11,22 @@ compinit
 
 # python3 is the default
 alias python=python3
+alias py=python
+alias listVirtualEnvs="ls ~/Documents/python/venv"
+function loadVirtualEnvPython {
+  echo "loading Python virtual env : $1"
+  source ~/Documents/python/venv/$1/bin/activate
+}
+
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/david/.oh-my-zsh"
+export ZSH="/Users/david.delgado/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 #ZSH_THEME="robbyrussell"
-ZSH_THEME="alien"
+ZSH_THEME="agnoster"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -78,7 +86,8 @@ HYPHEN_INSENSITIVE="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+#plugins=(git)
+plugins=(git git-flow brew history node npm kubectl)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -108,14 +117,22 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# alien theme
-#antigen theme eendroroy/alien alien
-source ~/zsh_external_themes/alien/alien.zsh
-export ALIEN_THEME="blue"
-
 # Added by serverless binary installer
 export PATH="$HOME/.serverless/bin:$PATH"
 
 # tabtab source for packages
 # uninstall by removing these lines
 [[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
+
+# Oh-my-zsh theme
+source ~/zsh_external_themes/alien/alien.zsh
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc'; fi
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
