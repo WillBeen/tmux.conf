@@ -1,25 +1,8 @@
 # If you come from bash you might have to change your $PATH.
-# export PATH=$HOME/bin:/usr/local/bin:$PATH
-export PATH=${PATH}:${HOME}/bin
-
-zstyle ':completion:*' completer _expand _complete _ignored
-zstyle ':completion:*' matcher-list 'm:{[:lower:][:upper:]}={[:upper:][:lower:]} l:|=* r:|=*' '' 'r:|[._-]=** r:|=**'
-zstyle :compinstall filename '/home/cloud_user/.zshrc'
-
-autoload -Uz compinit
-compinit
-
-# python3 is the default
-alias python=python3
-alias py=python
-alias listVirtualEnvs="ls ~/Documents/python/venv"
-function loadVirtualEnvPython {
-  echo "loading Python virtual env : $1"
-  source ~/Documents/python/venv/$1/bin/activate
-}
+export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/opt/ncurses/bin:/opt/homebrew/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/david.delgado/.oh-my-zsh"
+export ZSH="/Users/Frx25570/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -30,7 +13,7 @@ ZSH_THEME="agnoster"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
-# a theme from this variable instead of looking in ~/.oh-my-zsh/themes/
+# a theme from this variable instead of looking in $ZSH/themes/
 # If set to an empty array, this variable will have no effect.
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
@@ -39,7 +22,7 @@ ZSH_THEME="agnoster"
 
 # Uncomment the following line to use hyphen-insensitive completion.
 # Case-sensitive completion must be off. _ and - will be interchangeable.
-HYPHEN_INSENSITIVE="true"
+# HYPHEN_INSENSITIVE="true"
 
 # Uncomment the following line to disable bi-weekly auto-update checks.
 # DISABLE_AUTO_UPDATE="true"
@@ -116,6 +99,81 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+export sshagentfile=/tmp/sshagentfile
+function killSSHagents {
+  for process in `ps -ef | grep ssh-agent | grep -v grep | awk '{print $2}'` ; do
+    kill $process
+  done
+  rm -f ${sshagentfile}
+}
+
+# Starts and initialize ssh agent if not yet started
+# Attaches it to the session if already running
+function startSSHagent {
+  if [[ -f ${sshagentfile} ]] ; then
+    for var in `cat ${sshagentfile}` ; do
+      export ${var}
+    done
+  else
+    killSSHagents
+    eval `ssh-agent`
+    ssh-add ~/.ssh/foncia/gitlab.rsa
+    env | grep SSH > ${sshagentfile}
+  fi
+}
+
+# Adds or replaces an AWS profile in ~/.aws/credentials
+function setAWSprofile {
+  aws_profile=$1
+  tmpfile=`mktemp`
+  awk '!/\['${aws_profile}']/' RS="\n\n" ORS="\n\n" ~/.aws/credentials > ${tmpfile}
+  mv ${tmpfile} ~/.aws/credentials
+  read -d '`' creds
+  echo ${creds} | sed 's/ *\[.*]/['${aws_profile}']/g' >> ~/.aws/credentials
+  echo -e "\n\nVerifying AWS profile"
+  aws sts --profile ${aws_profile} get-caller-identity | cat
+}
+
+alias unassumeRole="for var in \$(env | grep '^AWS_' | cut -f"1" -d'=') ; do unset \$var ; done"
+
+function createvirtualenv {
+  python3 -m venv ~/pythonenvs/$1
+}
+function deletevirtualenv {
+  rm -rf ~/pythonenvs/$1
+}
+alias listvirtualenvs="ls ~/pythonenvs"
+function loadvirtualenv {
+  echo "loading Python virtual env : $1"
+  source ~/pythonenvs/$1/bin/activate
+}
+
+alias pip=pip3
+function plan {
+  ./launch.sh plan $@
+}
+function apply {
+  ./launch.sh apply $@
+}
+function init {
+  ./launch.sh init $@
+}
+
+function change_tf_version {
+  rm ~/bin/terraform
+  ln -s ~/bin/terraform_$1 ~/bin/terraform
+  terraform --version
+}
+alias tf_0-12-29="change_tf_version '0.12.29'"
+alias tf_0-12-31="change_tf_version '0.12.31'"
+alias tf_0-13-7="change_tf_version '0.13.7'"
+alias tf_0-14-11="change_tf_version '0.14.11'"
+alias tf_1-0-7="change_tf_version '1.0.7'"
+alias tf_1-0-8="change_tf_version '1.0.8'"
+alias tf_1-0-11="change_tf_version '1.0.11'"
+
+# format and document terraform project with pre-commit
+alias precommit=".git/hooks/pre-commit"
 
 # Added by serverless binary installer
 export PATH="$HOME/.serverless/bin:$PATH"
@@ -125,7 +183,8 @@ export PATH="$HOME/.serverless/bin:$PATH"
 [[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 
 # Oh-my-zsh theme
-source ~/zsh_external_themes/alien/alien.zsh
+#source ~/zsh_external_themes/alien/alien.zsh
+source ~/.antigen/bundles/eendroroy/alien/alien.zsh
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc'; fi
@@ -136,3 +195,16 @@ if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc' ]; then .
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+# modules
+source /opt/homebrew/share/antigen/antigen.zsh
+
+if [[ -f "$HOME/.okta/bash_functions" ]]; then
+    . "$HOME/.okta/bash_functions"
+fi
+if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
+    PATH="$HOME/.okta/bin:$PATH"
+fi
+
+# start SSH agent
+startSSHagent
