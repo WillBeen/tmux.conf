@@ -1,5 +1,5 @@
 # If you come from bash you might have to change your $PATH.
-export PATH=$HOME/bin:/usr/local/bin:/opt/homebrew/opt/ncurses/bin:/opt/homebrew/bin:$PATH
+export PATH=$HOME/bin:$HOME/tmux.conf:/usr/local/bin:/opt/homebrew/opt/ncurses/bin:/opt/homebrew/bin:$PATH
 
 # Path to your oh-my-zsh installation.
 export ZSH="/Users/Frx25570/.oh-my-zsh"
@@ -28,7 +28,7 @@ ZSH_THEME="agnoster"
 # DISABLE_AUTO_UPDATE="true"
 
 # Uncomment the following line to automatically update without prompting.
-# DISABLE_UPDATE_PROMPT="true"
+DISABLE_UPDATE_PROMPT="true"
 
 # Uncomment the following line to change how often to auto-update (in days).
 # export UPDATE_ZSH_DAYS=13
@@ -46,7 +46,7 @@ ZSH_THEME="agnoster"
 # ENABLE_CORRECTION="true"
 
 # Uncomment the following line to display red dots whilst waiting for completion.
-# COMPLETION_WAITING_DOTS="true"
+COMPLETION_WAITING_DOTS="true"
 
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
@@ -59,7 +59,7 @@ ZSH_THEME="agnoster"
 # "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # or set a custom format using the strftime function format specifications,
 # see 'man strftime' for details.
-# HIST_STAMPS="mm/dd/yyyy"
+HIST_STAMPS="yyyy/mm/dd"
 
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
@@ -128,10 +128,33 @@ function setAWSprofile {
   tmpfile=`mktemp`
   awk '!/\['${aws_profile}']/' RS="\n\n" ORS="\n\n" ~/.aws/credentials > ${tmpfile}
   mv ${tmpfile} ~/.aws/credentials
-  read -d '`' creds
+  read -s -d '`' creds
   echo ${creds} | sed 's/ *\[.*]/['${aws_profile}']/g' >> ~/.aws/credentials
-  echo -e "\n\nVerifying AWS profile"
+  echo -e "Verifying AWS profile"
   aws sts --profile ${aws_profile} get-caller-identity | cat
+}
+
+function awsprofiles {
+  profiles=()
+  ls terraform.*.tfvars | awk -F '.' '{print NR " : " $2}'
+  read -k 1 -s choice
+  env=$(ls terraform.*.tfvars | awk -F '.' '{if (NR=='${choice}') print $2}')
+
+  ls terraform.${env}.tfvars >/dev/null 2>&1 || (echo "bad value !" ; exit 1) || return 1
+
+  profiles+=($(egrep "profile *= *\"" terraform.${env}.tfvars | cut -d '"' -f 2))
+  egrep "profile *= *\"" *.tf | cut -d '"' -f 2 | while read -r profile ; do
+    profiles+=(${profile})
+  done
+
+  for profile in ${profiles[@]} ; do
+    echo -e "\nCopy credentials (option 2) for profile : ${profile}\n(Validate by entering backquote key : \` )"
+    setAWSprofile $profile
+  done
+
+  tmp_cred=$(mktemp)
+  cat -s ~/.aws/credentials > ${tmp_cred}
+  mv ${tmp_cred} ~/.aws/credentials
 }
 
 alias unassumeRole="for var in \$(env | grep '^AWS_' | cut -f"1" -d'=') ; do unset \$var ; done"
@@ -159,14 +182,81 @@ function init {
   ./launch.sh init $@
 }
 
+export ciexpand_py_virtual_env="terraform"
+function ciexpand {
+    loadvirtualenv ${ciexpand_py_virtual_env} > /dev/null
+    expand_gitlab-ci.py
+    deactivate
+}
+function cilocal {
+  # expand .gitlab-ci.yml
+  export base_dir="/Users/Frx25570/Documents/gitrepos/"
+  cp .gitlab-ci.yml .gitlab-ci.yml.svg
+  if [[ "$(yq '.include' .gitlab-ci.yml)" != "null" ]] ; then
+    expand=true
+    else
+    expand=false
+  fi
+  if ${expand} ; then
+    echo "## expanding .gilab-ci.yml ##"
+    template_project=$(yq -r '.include[0].project' .gitlab-ci.yml)
+    template_branch=$(yq '.variables.TEMPLATE_CI_VERSION' .gitlab-ci.yml | cut -d '"' -f 2)
+    this_dir=$(pwd)
+    cd "${base_dir}${template_project}"
+    git checkout ${template_branch} > /dev/null 2>&1
+    cd ${this_dir}
+    ciexpand
+    # loadvirtualenv ${ciexpand_py_virtual_env} > /dev/null
+    # expand_gitlab-ci.py
+    # deactivate
+    echo "## .gilab-ci.yml has been expanded ##"
+  fi
+
+  temp_commit_msg="temp commit for cilocal"
+  # check if something to commit
+  if [ -n "$(git status --porcelain)" ]; then
+    git add . >/dev/null 2>&1
+    git commit -m "${temp_commit_msg}" >/dev/null 2>&1
+    git add . >/dev/null 2>&1
+    git commit -m "${temp_commit_msg}" >/dev/null 2>&1
+  fi
+
+  # list all jobs and runs selected one
+  i=0
+  jobs=()
+  for job in $(yq -r 'to_entries[] | select(.value | type == "object") | select(.value | has("stage")) | .key' .gitlab-ci.yml) ; do
+  # for job in $(yq -r 'keys[] | select(match("^syntax-.*")) | .' .gitlab-ci.yml) $(yq -r 'keys[] | select(match("^deploy-.*")) | .' .gitlab-ci.yml) ; do
+    if [[ "${job:0:1}" != "." ]] ; then
+      jobs+=($job)
+      i=$(($i+1))
+      echo $i : $job
+    fi
+  done
+  read jobnum
+  job_name=${jobs[${jobnum}]}
+  gitlab-runner exec docker "${job_name}"
+
+  # remove temp commit
+  if $(git show HEAD | grep -q "${temp_commit_msg}") ; then git reset --mixed HEAD~1 >/dev/null 2>&1 ; fi
+  
+  if ${expand} ; then
+    # restore .gitlab-ci.yml
+    # cp .gitlab-ci.yml .gitlab-ci.yml.pouet.yml
+    mv .gitlab-ci.yml.svg .gitlab-ci.yml
+  fi
+}
+
 function change_tf_version {
   rm ~/bin/terraform
   ln -s ~/bin/terraform_$1 ~/bin/terraform
   terraform --version
 }
+alias tf013="change_tf_version '0.13.7'"
+alias tf1="change_tf_version '1.1.6'"
+
+
 alias tf_0-12-29="change_tf_version '0.12.29'"
 alias tf_0-12-31="change_tf_version '0.12.31'"
-alias tf_0-13-7="change_tf_version '0.13.7'"
 alias tf_0-14-11="change_tf_version '0.14.11'"
 alias tf_1-0-7="change_tf_version '1.0.7'"
 alias tf_1-0-8="change_tf_version '1.0.8'"
@@ -206,5 +296,9 @@ if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
     PATH="$HOME/.okta/bin:$PATH"
 fi
 
+# alias gcl='gitlab-ci-local'
+# gitlab-ci-local --completion 
+
 # start SSH agent
 startSSHagent
+
