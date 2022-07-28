@@ -9,16 +9,14 @@ from git import Repo
 expanded_file = ".gitlab-ci.yml"
 gitlab_url = "https://gitlab-devops.foncia.net"
 
-temp_path = tempfile.TemporaryDirectory()
-
-def get_template_dir(git_project, git_branch):
-    template_dir = temp_path.name + "/" + git_project + "/"
+def get_template(gci, project, branch):
+    template_dir = temp_path.name + "/" + gci["include"][0]["project"] + "/"
     if not os.path.isdir(template_dir) :
-        repo_url = gitlab_url + "/" + git_project + ".git"
+        repo_url = gitlab_url + "/" + gci["include"][0]["project"] + ".git"
         repo = Repo.clone_from(repo_url, template_dir)
     else :
         repo = Repo(template_dir)
-    repo.git.checkout(git_branch)
+    repo.git.checkout(branch)
     return template_dir
 
 with open(expanded_file, "r") as file :
@@ -27,9 +25,11 @@ with open(expanded_file, "r") as file :
 if "include" in gci :
     includes = gci["include"]
 
+    temp_path = tempfile.TemporaryDirectory()
+
     # replace includes
     for inc in includes :
-        template_dir = get_template_dir(inc["project"], inc["ref"])
+        template_dir = get_template(gci, inc["file"], inc["ref"])
         with open(template_dir + inc["file"], 'r') as file :
             included = yaml.safe_load(file.read())
             for i in included :
@@ -40,19 +40,19 @@ if "include" in gci :
                         gci[i] += included[i]
                 else :
                     gci.update({i : included[i]})
+
+    # replace extends
+    for item in gci :
+        if isinstance(gci[item], dict) :
+            if 'extends' in gci[item] :
+                gci[item].update(gci[gci[item]['extends']])
+
+
     gci.pop("include")
 
-# replace extends
-for item in gci :
-    if isinstance(gci[item], dict) :
-        if 'extends' in gci[item] :
-            gci[item].update(gci[gci[item]['extends']])
+    # only to solve a bug in yaml module ...
+    gci = json.dumps(gci, sort_keys=False, indent=2)
+    gci = json.loads(gci)
 
-
-
-# only to solve a bug in yaml module ...
-gci = json.dumps(gci, sort_keys=False, indent=2)
-gci = json.loads(gci)
-
-with open(expanded_file, 'w') as file :
-    file.write(yaml.dump(gci, sort_keys=False, width=float("inf")))
+    with open(expanded_file, 'w') as file :
+        file.write(yaml.dump(gci, sort_keys=False))

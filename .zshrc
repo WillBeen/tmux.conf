@@ -99,6 +99,7 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
+alias dockercleanup="docker rm -f $(docker ps -a -q)"
 export sshagentfile=/tmp/sshagentfile
 function killSSHagents {
   for process in `ps -ef | grep ssh-agent | grep -v grep | awk '{print $2}'` ; do
@@ -120,6 +121,13 @@ function startSSHagent {
     ssh-add ~/.ssh/foncia/gitlab.rsa
     env | grep SSH > ${sshagentfile}
   fi
+}
+
+function compushterraform {
+  terraform fmt
+  git add .
+  git commit -m "$@"
+  git push -o ci.skip
 }
 
 # Adds or replaces an AWS profile in ~/.aws/credentials
@@ -189,30 +197,9 @@ function ciexpand {
     deactivate
 }
 function cilocal {
-  # expand .gitlab-ci.yml
-  export base_dir="/Users/Frx25570/Documents/gitrepos/"
-  cp .gitlab-ci.yml .gitlab-ci.yml.svg
-  if [[ "$(yq '.include' .gitlab-ci.yml)" != "null" ]] ; then
-    expand=true
-    else
-    expand=false
-  fi
-  if ${expand} ; then
-    echo "## expanding .gilab-ci.yml ##"
-    template_project=$(yq -r '.include[0].project' .gitlab-ci.yml)
-    template_branch=$(yq '.variables.TEMPLATE_CI_VERSION' .gitlab-ci.yml | cut -d '"' -f 2)
-    this_dir=$(pwd)
-    cd "${base_dir}${template_project}"
-    git checkout ${template_branch} > /dev/null 2>&1
-    cd ${this_dir}
-    ciexpand
-    # loadvirtualenv ${ciexpand_py_virtual_env} > /dev/null
-    # expand_gitlab-ci.py
-    # deactivate
-    echo "## .gilab-ci.yml has been expanded ##"
-  fi
-
+  INFRACOST_API_KEY="Sn0ZWxihkoVRpeMmBIFo4ncZ11vRr9EJ"
   temp_commit_msg="temp commit for cilocal"
+  temp_commit_msg_expand="temp commit for cilocal : ciexpand"
   # check if something to commit
   if [ -n "$(git status --porcelain)" ]; then
     git add . >/dev/null 2>&1
@@ -221,29 +208,46 @@ function cilocal {
     git commit -m "${temp_commit_msg}" >/dev/null 2>&1
   fi
 
-  # list all jobs and runs selected one
-  i=0
-  jobs=()
-  for job in $(yq -r 'to_entries[] | select(.value | type == "object") | select(.value | has("stage")) | .key' .gitlab-ci.yml) ; do
-  # for job in $(yq -r 'keys[] | select(match("^syntax-.*")) | .' .gitlab-ci.yml) $(yq -r 'keys[] | select(match("^deploy-.*")) | .' .gitlab-ci.yml) ; do
-    if [[ "${job:0:1}" != "." ]] ; then
-      jobs+=($job)
-      i=$(($i+1))
-      echo $i : $job
-    fi
-  done
-  read jobnum
-  job_name=${jobs[${jobnum}]}
-  gitlab-runner exec docker "${job_name}"
+  # expand .gitlab-ci.yml
+  cp .gitlab-ci.yml .gitlab-ci.yml.svg
+  ciexpand
+  git add . >/dev/null 2>&1
+  git commit -m "${temp_commit_msg_expand}" >/dev/null 2>&1
 
-  # remove temp commit
-  if $(git show HEAD | grep -q "${temp_commit_msg}") ; then git reset --mixed HEAD~1 >/dev/null 2>&1 ; fi
-  
-  if ${expand} ; then
-    # restore .gitlab-ci.yml
-    # cp .gitlab-ci.yml .gitlab-ci.yml.pouet.yml
-    mv .gitlab-ci.yml.svg .gitlab-ci.yml
+  if [ -z "$1" ] ; then
+    # list all jobs and runs selected one
+    i=0
+    jobs=()
+    for job in $(yq -r 'to_entries[] | select(.value | type == "object") | select(.value | has("stage")) | .key' .gitlab-ci.yml) ; do
+    # for job in $(yq -r 'keys[] | select(match("^syntax-.*")) | .' .gitlab-ci.yml) $(yq -r 'keys[] | select(match("^deploy-.*")) | .' .gitlab-ci.yml) ; do
+      if [[ "${job:0:1}" != "." ]] ; then
+        jobs+=($job)
+        i=$(($i+1))
+        echo $i : $job
+      fi
+    done
+    read jobnum
+    job_name=${jobs[${jobnum}]}
+  else
+    job_name="${1}"
   fi
+  gitlab-runner exec docker "${job_name}" --env "INFRACOST_API_KEY=${INFRACOST_API_KEY}" || result=$?
+
+  # remove temp commit for ciexpand
+  commit_msg=$(git log -1 --pretty=%B)
+  while [ "${commit_msg}" = "${temp_commit_msg_expand}" ] ; do
+    git reset --hard HEAD~1 >/dev/null 2>&1
+    commit_msg=$(git log -1 --pretty=%B)
+  done
+
+  # remove temp commit for cilocal
+  commit_msg=$(git log -1 --pretty=%B)
+  while [ "${commit_msg}" = "${temp_commit_msg}" ] ; do
+    git reset --mixed HEAD~1 >/dev/null 2>&1
+    commit_msg=$(git log -1 --pretty=%B)
+  done
+  
+  return ${result}
 }
 
 function change_tf_version {
@@ -252,15 +256,12 @@ function change_tf_version {
   terraform --version
 }
 alias tf013="change_tf_version '0.13.7'"
-alias tf1="change_tf_version '1.1.6'"
 
 
 alias tf_0-12-29="change_tf_version '0.12.29'"
 alias tf_0-12-31="change_tf_version '0.12.31'"
 alias tf_0-14-11="change_tf_version '0.14.11'"
-alias tf_1-0-7="change_tf_version '1.0.7'"
-alias tf_1-0-8="change_tf_version '1.0.8'"
-alias tf_1-0-11="change_tf_version '1.0.11'"
+alias tf1="change_tf_version '1.2.5'"
 
 # format and document terraform project with pre-commit
 alias precommit=".git/hooks/pre-commit"
@@ -296,9 +297,15 @@ if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
     PATH="$HOME/.okta/bin:$PATH"
 fi
 
-# alias gcl='gitlab-ci-local'
-# gitlab-ci-local --completion 
+
+# a retenir
+
+# compilation QMK
+export qmkpath="${HOME}/Documents/config/qmk_firmware"
+# qmk setup -H ${qmkpath}
+# alias qmkcomp='qmk compile -kb crkbd -km willbeen'
+alias qmkcomp='qmk compile -kb boardsource/microdox/v2 -km willbeen'
+
 
 # start SSH agent
 startSSHagent
-
