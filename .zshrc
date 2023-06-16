@@ -2,14 +2,15 @@
 export PATH=$HOME/bin:$HOME/tmux.conf:/usr/local/bin:/opt/homebrew/opt/ncurses/bin:/opt/homebrew/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/Users/Frx25570/.oh-my-zsh"
+export ZSH="${HOME}/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
 # to know which specific one was loaded, run: echo $RANDOM_THEME
 # See https://github.com/robbyrussell/oh-my-zsh/wiki/Themes
 #ZSH_THEME="robbyrussell"
-ZSH_THEME="agnoster"
+# ZSH_THEME="agnoster"
+# ZSH_THEME="alien"
 
 # Set list of themes to pick from when loading at random
 # Setting this variable when ZSH_THEME=random will cause zsh to load
@@ -70,7 +71,7 @@ HIST_STAMPS="yyyy/mm/dd"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 #plugins=(git)
-plugins=(git git-flow brew history node npm kubectl)
+plugins=(git git-flow brew history node npm)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -99,7 +100,8 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-alias dockercleanup="docker rm -f $(docker ps -a -q)"
+
+# alias dockercleanup="docker rm -f $(docker ps -a -q)"
 export sshagentfile=/tmp/sshagentfile
 function killSSHagents {
   for process in `ps -ef | grep ssh-agent | grep -v grep | awk '{print $2}'` ; do
@@ -196,72 +198,76 @@ function ciexpand {
     expand_gitlab-ci.py
     deactivate
 }
-function cilocal {
-  INFRACOST_API_KEY="Sn0ZWxihkoVRpeMmBIFo4ncZ11vRr9EJ"
-  temp_commit_msg="temp commit for cilocal"
-  temp_commit_msg_expand="temp commit for cilocal : ciexpand"
-  # check if something to commit
-  if [ -n "$(git status --porcelain)" ]; then
-    git add . >/dev/null 2>&1
-    git commit -m "${temp_commit_msg}" >/dev/null 2>&1
-    git add . >/dev/null 2>&1
-    git commit -m "${temp_commit_msg}" >/dev/null 2>&1
-  fi
+# function cilocal {
+#   INFRACOST_API_KEY="Sn0ZWxihkoVRpeMmBIFo4ncZ11vRr9EJ"
+#   temp_commit_msg="temp commit for cilocal"
+#   temp_commit_msg_expand="temp commit for cilocal : ciexpand"
+#   # check if something to commit
+#   if [ -n "$(git status --porcelain)" ]; then
+#     git add . >/dev/null 2>&1
+#     git commit -m "${temp_commit_msg}" >/dev/null 2>&1
+#     git add . >/dev/null 2>&1
+#     git commit -m "${temp_commit_msg}" >/dev/null 2>&1
+#   fi
 
-  # expand .gitlab-ci.yml
-  cp .gitlab-ci.yml .gitlab-ci.yml.svg
-  ciexpand
-  git add . >/dev/null 2>&1
-  git commit -m "${temp_commit_msg_expand}" >/dev/null 2>&1
+#   # expand .gitlab-ci.yml
+#   cp .gitlab-ci.yml .gitlab-ci.yml.svg
+#   ciexpand
+#   git add . >/dev/null 2>&1
+#   git commit -m "${temp_commit_msg_expand}" >/dev/null 2>&1
 
-  if [ -z "$1" ] ; then
-    # list all jobs and runs selected one
-    i=0
-    jobs=()
-    for job in $(yq -r 'to_entries[] | select(.value | type == "object") | select(.value | has("stage")) | .key' .gitlab-ci.yml) ; do
-    # for job in $(yq -r 'keys[] | select(match("^syntax-.*")) | .' .gitlab-ci.yml) $(yq -r 'keys[] | select(match("^deploy-.*")) | .' .gitlab-ci.yml) ; do
-      if [[ "${job:0:1}" != "." ]] ; then
-        jobs+=($job)
-        i=$(($i+1))
-        echo $i : $job
-      fi
-    done
-    read jobnum
-    job_name=${jobs[${jobnum}]}
-  else
-    job_name="${1}"
-  fi
-  gitlab-runner exec docker "${job_name}" --env "INFRACOST_API_KEY=${INFRACOST_API_KEY}" || result=$?
+#   if [ -z "$1" ] ; then
+#     # list all jobs and runs selected one
+#     i=0
+#     jobs=()
+#     for job in $(yq -r 'to_entries[] | select(.value | type == "object") | select(.value | has("stage")) | .key' .gitlab-ci.yml) ; do
+#     # for job in $(yq -r 'keys[] | select(match("^syntax-.*")) | .' .gitlab-ci.yml) $(yq -r 'keys[] | select(match("^deploy-.*")) | .' .gitlab-ci.yml) ; do
+#       if [[ "${job:0:1}" != "." ]] ; then
+#         jobs+=($job)
+#         i=$(($i+1))
+#         echo $i : $job
+#       fi
+#     done
+#     read jobnum
+#     job_name=${jobs[${jobnum}]}
+#   else
+#     job_name="${1}"
+#   fi
+#   gitlab-runner exec docker "${job_name}" --env "INFRACOST_API_KEY=${INFRACOST_API_KEY}" || result=$?
 
-  # remove temp commit for ciexpand
-  commit_msg=$(git log -1 --pretty=%B)
-  while [ "${commit_msg}" = "${temp_commit_msg_expand}" ] ; do
-    git reset --hard HEAD~1 >/dev/null 2>&1
-    commit_msg=$(git log -1 --pretty=%B)
-  done
+#   # remove temp commit for ciexpand
+#   commit_msg=$(git log -1 --pretty=%B)
+#   while [ "${commit_msg}" = "${temp_commit_msg_expand}" ] ; do
+#     git reset --hard HEAD~1 >/dev/null 2>&1
+#     commit_msg=$(git log -1 --pretty=%B)
+#   done
 
-  # remove temp commit for cilocal
-  commit_msg=$(git log -1 --pretty=%B)
-  while [ "${commit_msg}" = "${temp_commit_msg}" ] ; do
-    git reset --mixed HEAD~1 >/dev/null 2>&1
-    commit_msg=$(git log -1 --pretty=%B)
-  done
+#   # remove temp commit for cilocal
+#   commit_msg=$(git log -1 --pretty=%B)
+#   while [ "${commit_msg}" = "${temp_commit_msg}" ] ; do
+#     git reset --mixed HEAD~1 >/dev/null 2>&1
+#     commit_msg=$(git log -1 --pretty=%B)
+#   done
   
-  return ${result}
-}
+#   return ${result}
+# }
 
 function change_tf_version {
   rm ~/bin/terraform
   ln -s ~/bin/terraform_$1 ~/bin/terraform
   terraform --version
 }
-alias tf013="change_tf_version '0.13.7'"
 
+function change_tf_last_version {
+  rm ~/bin/terraform
+  ln -s $(ls -tr ~/bin/terraform_* | tail -1) ~/bin/terraform
+  terraform --version
+}
 
-alias tf_0-12-29="change_tf_version '0.12.29'"
-alias tf_0-12-31="change_tf_version '0.12.31'"
-alias tf_0-14-11="change_tf_version '0.14.11'"
-alias tf1="change_tf_version '1.2.5'"
+alias tflast=change_tf_last_version
+
+alias tf_0-14="change_tf_version '0.14.4'"
+alias tf1="change_tf_version '1.2.6'"
 
 # format and document terraform project with pre-commit
 alias precommit=".git/hooks/pre-commit"
@@ -288,7 +294,7 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # modules
-source /opt/homebrew/share/antigen/antigen.zsh
+source /usr/local/share/antigen/antigen.zsh
 
 if [[ -f "$HOME/.okta/bash_functions" ]]; then
     . "$HOME/.okta/bash_functions"
@@ -298,14 +304,27 @@ if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
 fi
 
 
-# a retenir
+### a retenir
+### pour avoir les dernières updates de QMK : 
 
-# compilation QMK
-export qmkpath="${HOME}/Documents/config/qmk_firmware"
+# make git-submodule
+
+### pour compiler QMK sur blok (RP2040), ajouter ça au rules.mk : CONVERT_TO = blok
+### compilation QMK
+
+export qmkpath="${HOME}/Documents/gitrepos/perso/qmk_firmware"
+
+### pour monter le microdox en rw : 
+"
+umount  /dev/disk2s1
+mkdir /Volumes/disk2s1
+mount -t msdos -o rw,auto,nobrowse /dev/disk2s1 /Volumes/disk2s1
+cp /Users/david.delgado/Documents/gitrepos/perso/qmk_firmware/boardsource_microdox_v2_willbeen_blok.uf2 /Volumes/disk2s1/
+"
+
 # qmk setup -H ${qmkpath}
 # alias qmkcomp='qmk compile -kb crkbd -km willbeen'
 alias qmkcomp='qmk compile -kb boardsource/microdox/v2 -km willbeen'
 
-
-# start SSH agent
-startSSHagent
+# alias display usefull commands
+alias useful_commands='less ~/tmux.conf.d/useful_commands.txt'

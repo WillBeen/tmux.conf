@@ -1,0 +1,26 @@
+# check tls version
+openssl s_client -connect domain.name:port 
+# check if compatible with TLS 1, TLS 1.1, ...
+openssl s_client -connect domain.name:port -tls1
+openssl s_client -connect domain.name:port -tls1_1
+openssl s_client -connect domain.name:port -tls1_2
+
+###########################
+# AWS
+###########################
+
+# get temporary creds from CloudShell
+curl -H "Authorization: $AWS_CONTAINER_AUTHORIZATION_TOKEN" $AWS_CONTAINER_CREDENTIALS_FULL_URI 2>/dev/null > /tmp/credentials
+ACCESS_KEY=`cat /tmp/credentials| jq -r .AccessKeyId`
+SECRET_KEY=`cat /tmp/credentials| jq -r .SecretAccessKey`
+SESSION_TOKEN=`cat /tmp/credentials| jq -r .Token`
+echo -ne "\nexport AWS_ACCESS_KEY_ID=${ACCESS_KEY};\nexport AWS_SECRET_ACCESS_KEY=${SECRET_KEY};\nexport AWS_SESSION_TOKEN=${SESSION_TOKEN};\n\n"
+
+# start portforwarding with SSM
+instance_id=i-0e159371ba4c91dbf
+aws  ssm start-session --target $instance_id --document-name AWS-StartPortForwardingSession --parameters "localPortNumber=22,portNumber=22" --region eu-west-1
+
+# start portforwarding to remote host with SSM
+instance_id=i-04a318a6f9f5e6066
+remote_host="10.184.17.77"
+aws  ssm start-session --target $instance_id --document-name AWS-StartPortForwardingSessionToRemoteHost --parameters "localPortNumber=1521,portNumber=1521,host=${remote_host}" --region eu-west-1
