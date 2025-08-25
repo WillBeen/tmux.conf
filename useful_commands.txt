@@ -14,11 +14,13 @@ curl -H "Authorization: $AWS_CONTAINER_AUTHORIZATION_TOKEN" $AWS_CONTAINER_CREDE
 ACCESS_KEY=`cat /tmp/credentials| jq -r .AccessKeyId`
 SECRET_KEY=`cat /tmp/credentials| jq -r .SecretAccessKey`
 SESSION_TOKEN=`cat /tmp/credentials| jq -r .Token`
-echo -ne "\nexport AWS_ACCESS_KEY_ID=${ACCESS_KEY};\nexport AWS_SECRET_ACCESS_KEY=${SECRET_KEY};\nexport AWS_SESSION_TOKEN=${SESSION_TOKEN};\n\n"
+echo -ne "\nLINUX / MACOS\n\nexport AWS_ACCESS_KEY_ID=${ACCESS_KEY};\nexport AWS_SECRET_ACCESS_KEY=${SECRET_KEY};\nexport AWS_SESSION_TOKEN=${SESSION_TOKEN};\n\n"
+echo -ne "\nPOWERSHELL\n\n\$Env:AWS_ACCESS_KEY_ID=\"${ACCESS_KEY}\"\n\$Env:AWS_SECRET_ACCESS_KEY=\"${SECRET_KEY}\"\n\$Env:AWS_SESSION_TOKEN=\"${SESSION_TOKEN}\"\n\n"
 
 # start portforwarding with SSM
-instance_id=i-0e159371ba4c91dbf
-aws  ssm start-session --target $instance_id --document-name AWS-StartPortForwardingSession --parameters "localPortNumber=22,portNumber=22" --region eu-west-1
+instance_id=i-084013276c91cc77b
+port=1521
+aws  ssm start-session --target $instance_id --document-name AWS-StartPortForwardingSession --parameters "localPortNumber=${port},portNumber=${port}" --region eu-west-1
 
 # start portforwarding to remote host with SSM
 instance_id=i-04a318a6f9f5e6066

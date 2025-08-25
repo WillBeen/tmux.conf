@@ -102,28 +102,28 @@ source $ZSH/oh-my-zsh.sh
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
 # alias dockercleanup="docker rm -f $(docker ps -a -q)"
-export sshagentfile=/tmp/sshagentfile
-function killSSHagents {
-  for process in `ps -ef | grep ssh-agent | grep -v grep | awk '{print $2}'` ; do
-    kill $process
-  done
-  rm -f ${sshagentfile}
-}
+# export sshagentfile=/tmp/sshagentfile
+# function killSSHagents {
+#   for process in `ps -ef | grep ssh-agent | grep -v grep | awk '{print $2}'` ; do
+#     kill $process
+#   done
+#   rm -f ${sshagentfile}
+# }
 
-# Starts and initialize ssh agent if not yet started
-# Attaches it to the session if already running
-function startSSHagent {
-  if [[ -f ${sshagentfile} ]] ; then
-    for var in `cat ${sshagentfile}` ; do
-      export ${var}
-    done
-  else
-    killSSHagents
-    eval `ssh-agent`
-    ssh-add ~/.ssh/foncia/gitlab.rsa
-    env | grep SSH > ${sshagentfile}
-  fi
-}
+# # Starts and initialize ssh agent if not yet started
+# # Attaches it to the session if already running
+# function startSSHagent {
+#   if [[ -f ${sshagentfile} ]] ; then
+#     for var in `cat ${sshagentfile}` ; do
+#       export ${var}
+#     done
+#   else
+#     killSSHagents
+#     eval `ssh-agent`
+#     ssh-add ~/.ssh/foncia/gitlab.rsa
+#     env | grep SSH > ${sshagentfile}
+#   fi
+# }
 
 function compushterraform {
   terraform fmt
@@ -131,6 +131,8 @@ function compushterraform {
   git commit -m "$@"
   git push -o ci.skip
 }
+n=3
+n=$((n+1))
 
 # Adds or replaces an AWS profile in ~/.aws/credentials
 function setAWSprofile {
@@ -198,6 +200,7 @@ function ciexpand {
     expand_gitlab-ci.py
     deactivate
 }
+
 # function cilocal {
 #   INFRACOST_API_KEY="Sn0ZWxihkoVRpeMmBIFo4ncZ11vRr9EJ"
 #   temp_commit_msg="temp commit for cilocal"
@@ -289,9 +292,9 @@ if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc' ]; then . '/Use
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc'; fi
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+# export NVM_DIR="$HOME/.nvm"
+# [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # modules
 source /usr/local/share/antigen/antigen.zsh
@@ -302,6 +305,7 @@ fi
 if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
     PATH="$HOME/.okta/bin:$PATH"
 fi
+
 
 
 ### a retenir
@@ -315,16 +319,28 @@ fi
 export qmkpath="${HOME}/Documents/gitrepos/perso/qmk_firmware"
 
 ### pour monter le microdox en rw : 
-"
+if false ; then
 umount  /dev/disk2s1
 mkdir /Volumes/disk2s1
 mount -t msdos -o rw,auto,nobrowse /dev/disk2s1 /Volumes/disk2s1
 cp /Users/david.delgado/Documents/gitrepos/perso/qmk_firmware/boardsource_microdox_v2_willbeen_blok.uf2 /Volumes/disk2s1/
-"
+fi
 
 # qmk setup -H ${qmkpath}
-# alias qmkcomp='qmk compile -kb crkbd -km willbeen'
+# alias qmkcomp='qmk compile -kb crkbd -km willbeen' 
 alias qmkcomp='qmk compile -kb boardsource/microdox/v2 -km willbeen'
 
 # alias display usefull commands
 alias useful_commands='less ~/tmux.conf.d/useful_commands.txt'
+
+# alias to start colima
+alias colima-start='colima start; docker context use colima'
+#alias docker to colima
+alias d='docker'
+alias dc='docker-compose'
+alias dcu='docker-compose up -d'
+alias dcd='docker-compose down'
+alias start='. ./start.sh'
+
+# connection au S07 avec docker ssh client
+alias dgacssh='docker run --rm -it ssh-client:latest ssh -i /dgac-key -o StrictHostKeyChecking=no david.delgado@ssh.lfpw.dsna.fr'
