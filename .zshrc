@@ -1,5 +1,9 @@
-# Active le profiling de Zsh
-#zmodload zsh/zprof
+# Optimisations de performance
+skip_global_compinit=1
+ZSH_DISABLE_COMPFIX=true
+
+# Mesure du temps de chargement
+typeset -F SECONDS=0
 
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/tmux.conf:/usr/local/bin:/opt/homebrew/opt/ncurses/bin:/opt/homebrew/bin:$PATH
@@ -21,12 +25,12 @@ export ZSH="${HOME}/.oh-my-zsh"
 # If set to an empty array, this variable will have no effect.
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
 
-# Désactive la complétion avancée globale
-zstyle ':completion:*' completer _complete
-zstyle ':completion:*' menu no
-setopt noautomenu
-unsetopt globcomplete  # Désactive la complétion glob
-unsetopt autolist      # Désactive la liste automatique
+# Configuration pour les autosuggestions et complétion
+zstyle ':completion:*' completer _complete _approximate
+zstyle ':completion:*' menu select
+setopt automenu
+setopt globcomplete
+setopt autolist
 
 
 # Uncomment the following line to use case-sensitive completion.
@@ -36,8 +40,8 @@ unsetopt autolist      # Désactive la liste automatique
 # Case-sensitive completion must be off. _ and - will be interchangeable.
 # HYPHEN_INSENSITIVE="true"
 
-# Uncomment the following line to disable bi-weekly auto-update checks.
-# DISABLE_AUTO_UPDATE="true"
+# Désactiver les vérifications de mise à jour pour accélérer le démarrage
+DISABLE_AUTO_UPDATE="true"
 
 # Uncomment the following line to automatically update without prompting.
 DISABLE_UPDATE_PROMPT="true"
@@ -60,10 +64,8 @@ DISABLE_UPDATE_PROMPT="true"
 # Uncomment the following line to display red dots whilst waiting for completion.
 COMPLETION_WAITING_DOTS="true"
 
-# Uncomment the following line if you want to disable marking untracked files
-# under VCS as dirty. This makes repository status check for large repositories
-# much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+# Désactiver le marquage des fichiers non suivis pour accélérer git
+DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
@@ -81,7 +83,34 @@ HIST_STAMPS="yyyy/mm/dd"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
+# Chargement lazy des plugins pour améliorer les performances
 plugins=(git)
+
+# Lazy loading des plugins lourds
+function load_autosuggestions() {
+  if [[ ! -f ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]]; then
+    return
+  fi
+  source ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+  unfunction load_autosuggestions
+}
+
+function load_syntax_highlighting() {
+  if [[ ! -f ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+    return
+  fi
+  source ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+  unfunction load_syntax_highlighting
+}
+
+# Charger les plugins après le premier prompt
+function load_heavy_plugins() {
+  load_autosuggestions
+  load_syntax_highlighting
+  unfunction load_heavy_plugins
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd load_heavy_plugins
 #plugins=(git git-flow brew history)
 
 source $ZSH/oh-my-zsh.sh
@@ -225,9 +254,15 @@ alias precommit=".git/hooks/pre-commit"
 # desactive pour test
 #[[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 
-# Oh-my-zsh theme
-#source ~/zsh_external_themes/alien/alien.zsh
-source ~/.antigen/bundles/eendroroy/alien/alien.zsh
+# Lazy loading du thème alien
+function load_alien_theme() {
+  if [[ -f ~/.antigen/bundles/eendroroy/alien/alien.zsh ]]; then
+    source ~/.antigen/bundles/eendroroy/alien/alien.zsh
+  fi
+  unfunction load_alien_theme
+}
+# Charger le thème après oh-my-zsh
+load_alien_theme
 
 # The next line updates PATH for the Google Cloud SDK.
 # desactive pour test
@@ -290,3 +325,6 @@ alias start='. ./start.sh'
 
 # connection au S07 avec docker ssh client
 alias dgacssh='docker run --rm -it ssh-client:latest ssh -i /dgac-key -o StrictHostKeyChecking=no david.delgado@ssh.lfpw.dsna.fr'
+
+# Affichage du temps de chargement
+echo "⚡ Temps de chargement de .zshrc : ${SECONDS}s"
