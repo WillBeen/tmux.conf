@@ -1,3 +1,6 @@
+# Active le profiling de Zsh
+#zmodload zsh/zprof
+
 # If you come from bash you might have to change your $PATH.
 export PATH=$HOME/bin:$HOME/tmux.conf:/usr/local/bin:/opt/homebrew/opt/ncurses/bin:/opt/homebrew/bin:$PATH
 
@@ -17,6 +20,14 @@ export ZSH="${HOME}/.oh-my-zsh"
 # a theme from this variable instead of looking in $ZSH/themes/
 # If set to an empty array, this variable will have no effect.
 # ZSH_THEME_RANDOM_CANDIDATES=( "robbyrussell" "agnoster" )
+
+# Désactive la complétion avancée globale
+zstyle ':completion:*' completer _complete
+zstyle ':completion:*' menu no
+setopt noautomenu
+unsetopt globcomplete  # Désactive la complétion glob
+unsetopt autolist      # Désactive la liste automatique
+
 
 # Uncomment the following line to use case-sensitive completion.
 # CASE_SENSITIVE="true"
@@ -70,8 +81,8 @@ HIST_STAMPS="yyyy/mm/dd"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-#plugins=(git)
-plugins=(git git-flow brew history node npm)
+plugins=(git)
+#plugins=(git git-flow brew history)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -101,75 +112,6 @@ source $ZSH/oh-my-zsh.sh
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
 
-# alias dockercleanup="docker rm -f $(docker ps -a -q)"
-# export sshagentfile=/tmp/sshagentfile
-# function killSSHagents {
-#   for process in `ps -ef | grep ssh-agent | grep -v grep | awk '{print $2}'` ; do
-#     kill $process
-#   done
-#   rm -f ${sshagentfile}
-# }
-
-# # Starts and initialize ssh agent if not yet started
-# # Attaches it to the session if already running
-# function startSSHagent {
-#   if [[ -f ${sshagentfile} ]] ; then
-#     for var in `cat ${sshagentfile}` ; do
-#       export ${var}
-#     done
-#   else
-#     killSSHagents
-#     eval `ssh-agent`
-#     ssh-add ~/.ssh/foncia/gitlab.rsa
-#     env | grep SSH > ${sshagentfile}
-#   fi
-# }
-
-function compushterraform {
-  terraform fmt
-  git add .
-  git commit -m "$@"
-  git push -o ci.skip
-}
-n=3
-n=$((n+1))
-
-# Adds or replaces an AWS profile in ~/.aws/credentials
-function setAWSprofile {
-  aws_profile=$1
-  tmpfile=`mktemp`
-  awk '!/\['${aws_profile}']/' RS="\n\n" ORS="\n\n" ~/.aws/credentials > ${tmpfile}
-  mv ${tmpfile} ~/.aws/credentials
-  read -s -d '`' creds
-  echo ${creds} | sed 's/ *\[.*]/['${aws_profile}']/g' >> ~/.aws/credentials
-  echo -e "Verifying AWS profile"
-  aws sts --profile ${aws_profile} get-caller-identity | cat
-}
-
-function awsprofiles {
-  profiles=()
-  ls terraform.*.tfvars | awk -F '.' '{print NR " : " $2}'
-  read -k 1 -s choice
-  env=$(ls terraform.*.tfvars | awk -F '.' '{if (NR=='${choice}') print $2}')
-
-  ls terraform.${env}.tfvars >/dev/null 2>&1 || (echo "bad value !" ; exit 1) || return 1
-
-  profiles+=($(egrep "profile *= *\"" terraform.${env}.tfvars | cut -d '"' -f 2))
-  egrep "profile *= *\"" *.tf | cut -d '"' -f 2 | while read -r profile ; do
-    profiles+=(${profile})
-  done
-
-  for profile in ${profiles[@]} ; do
-    echo -e "\nCopy credentials (option 2) for profile : ${profile}\n(Validate by entering backquote key : \` )"
-    setAWSprofile $profile
-  done
-
-  tmp_cred=$(mktemp)
-  cat -s ~/.aws/credentials > ${tmp_cred}
-  mv ${tmp_cred} ~/.aws/credentials
-}
-
-alias unassumeRole="for var in \$(env | grep '^AWS_' | cut -f"1" -d'=') ; do unset \$var ; done"
 
 function createvirtualenv {
   python3 -m venv ~/pythonenvs/$1
@@ -276,35 +218,39 @@ alias tf1="change_tf_version '1.2.6'"
 alias precommit=".git/hooks/pre-commit"
 
 # Added by serverless binary installer
-export PATH="$HOME/.serverless/bin:$PATH"
+#export PATH="$HOME/.serverless/bin:$PATH"
 
 # tabtab source for packages
 # uninstall by removing these lines
-[[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
+# desactive pour test
+#[[ -f ~/.config/tabtab/__tabtab.zsh ]] && . ~/.config/tabtab/__tabtab.zsh || true
 
 # Oh-my-zsh theme
 #source ~/zsh_external_themes/alien/alien.zsh
 source ~/.antigen/bundles/eendroroy/alien/alien.zsh
 
 # The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc'; fi
+# desactive pour test
+#if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/path.zsh.inc'; fi
 
 # The next line enables shell command completion for gcloud.
-if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc'; fi
+# if [ -f '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc' ]; then . '/Users/david.delgado/tmp/google-cloud-sdk/completion.zsh.inc'; fi
 
 # export NVM_DIR="$HOME/.nvm"
 # [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
 # [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 # modules
-source /usr/local/share/antigen/antigen.zsh
+# desactive pour test
+#source /usr/local/share/antigen/antigen.zsh
 
-if [[ -f "$HOME/.okta/bash_functions" ]]; then
-    . "$HOME/.okta/bash_functions"
-fi
-if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
-    PATH="$HOME/.okta/bin:$PATH"
-fi
+# desactive pour test
+#if [[ -f "$HOME/.okta/bash_functions" ]]; then
+#    . "$HOME/.okta/bash_functions"
+#fi
+#if [[ -d "$HOME/.okta/bin" && ":$PATH:" != *":$HOME/.okta/bin:"* ]]; then
+#    PATH="$HOME/.okta/bin:$PATH"
+#fi
 
 
 
