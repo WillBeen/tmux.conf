@@ -18,7 +18,6 @@ alias l='ls -lisa --color'
 alias rldbashrc='. ~/.bashrc'
 alias edbashrc='vi ~/.bashrc ; rldbashrc'
 alias catbashrc='cat ~/.bashrc'
-alias edspecific='vi ~/tmux.conf.d/specific_pmu.sh ; rldbashrc'
 
 # edit and reload .vimrc
 alias rldvimrc='. ~/.vimrc'
@@ -58,8 +57,6 @@ function tmu() {
 alias rldtmux='tmux source-file ~/.tmux.conf'
 alias edtmux='vi ~/.tmux.conf ; rldtmux'
 
-# specific boulot
-. ~/tmux.conf.d/specific_pmu.sh
 # edit cloud known hosts
 alias cloud_known_hosts="vim scp://gcf-mut-cldv1.adm.parimutuel.local//home/p093770/.ssh/known_hosts"
 
